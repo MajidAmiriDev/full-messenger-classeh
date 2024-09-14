@@ -1,0 +1,43 @@
+<!-- public/send-message.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Send Message</title>
+</head>
+<body>
+<h1>Send Message</h1>
+<form id="sendMessageForm">
+    <label for="group">Group ID:</label>
+    <input type="text" id="group" required><br>
+    <label for="message">Message:</label>
+    <textarea id="message" required></textarea><br>
+    <button type="submit">Send Message</button>
+</form>
+
+<script>
+    document.getElementById('sendMessageForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const groupId = document.getElementById('group').value;
+        const text = document.getElementById('message').value;
+
+        const token = localStorage.getItem('token');
+        const response = await fetch('/api/messages/send', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ groupId, text }),
+        });
+
+        if (response.ok) {
+            alert('Message sent successfully!');
+        } else {
+            alert('Error sending message');
+        }
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Groups</title>
+    <style>
+        #messages {
+            display: none;
+            margin-top: 20px;
+        }
+        #messages ul {
+            list-style: none;
+            padding: 0;
+        }
+        #messages li {
+            margin-bottom: 10px;
+        }
+        #addUserForm {
+            display: none;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+<h1>Your Groups</h1>
+<ul id="groupsList"></ul>
+
+<div id="messages">
+    <h2>Messages</h2>
+    <ul id="messagesList"></ul>
+    <textarea id="messageInput" rows="4" cols="50"></textarea>
+    <button id="sendButton">Send</button>
+
+    <div id="addUserForm">
+        <h3>Add User to Group</h3>
+        <input type="text" id="userIdInput" placeholder="Enter User ID">
+        <button id="addUserButton">Add User</button>
+    </div>
+</div>
+
+<script>
+    async function fetchGroups() {
+        const token = localStorage.getItem('token');
+        const response = await fetch('/api/groups/user-groups', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        const groups = await response.json();
+
+        const groupsList = document.getElementById('groupsList');
+        groupsList.innerHTML = '';
+        groups.forEach(group => {
+            const li = document.createElement('li');
+            li.textContent = group.name;
+            li.style.cursor = 'pointer';
+            li.addEventListener('click', () => showGroupMessages(group._id));
+            groupsList.appendChild(li);
+        });
+    }
+
+    async function showGroupMessages(groupId) {
+        const messagesDiv = document.getElementById('messages');
+        messagesDiv.style.display = 'block';
+
+        const messagesList = document.getElementById('messagesList');
+        messagesList.innerHTML = '';
+
+        const token = localStorage.getItem('token');
+        const response = await fetch(`/api/messages/messages?groupId=${groupId}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        const messages = await response.json();
+
+        messages.forEach(message => {
+            const li = document.createElement('li');
+            li.textContent = message.text;
+            messagesList.appendChild(li);
+        });
+
+        // ذخیره groupId برای استفاده در ارسال پیام و اضافه کردن کاربر
+        document.getElementById('sendButton').onclick = () => sendMessage(groupId);
+        document.getElementById('addUserButton').onclick = () => addUserToGroup(groupId);
+
+        // نمایش فرم اضافه کردن کاربر
+        document.getElementById('addUserForm').style.display = 'block';
+    }
+
+    async function sendMessage(groupId) {
+        const text = document.getElementById('messageInput').value;
+        const token = localStorage.getItem('token');
+
+        const response = await fetch('/api/messages/send', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ groupId, text })
+        });
+
+        const data = await response.json();
+
+        if (data._id) {
+            const messagesList = document.getElementById('messagesList');
+            const li = document.createElement('li');
+            li.textContent = data.text;
+            messagesList.appendChild(li);
+            document.getElementById('messageInput').value = '';
+        }
+    }
+
+    async function addUserToGroup(groupId) {
+        const userId = document.getElementById('userIdInput').value;
+        const token = localStorage.getItem('token');
+
+        const response = await fetch('/api/groups/add-user', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ groupId, userId })
+        });
+
+        const data = await response.json();
+
+        if (data.members) {
+            alert('User added to group successfully!');
+        } else {
+            alert('Failed to add user to group.');
+        }
+    }
+
+    fetchGroups();
+</script>
+</body>
+</html>
