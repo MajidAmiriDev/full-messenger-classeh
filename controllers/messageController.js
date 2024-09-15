@@ -1,6 +1,6 @@
 const Message = require('../models/messageModel');
 const Group = require('../models/groupModel');
-
+const admin = require('../utils/firebase');
 // ارسال پیام به گروه
 exports.sendMessage = async (req, res) => {
     const { groupId, text } = req.body;
@@ -22,6 +22,18 @@ exports.sendMessage = async (req, res) => {
             sender: req.user.id,
             text,
         });
+
+        const tokens = group.members.map(member => member.fcmToken); // فرض بر این است که هر کاربر `fcmToken` دارد
+        const notification = {
+            notification: {
+                title: `New message from ${sender}`,
+                body: content,
+            },
+            tokens: tokens,
+        };
+
+        // ارسال نوتیفیکیشن از طریق Firebase
+        await admin.messaging().sendMulticast(notification);
 
         await message.save();
         res.json(message);

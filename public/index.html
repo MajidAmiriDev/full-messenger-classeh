@@ -4,48 +4,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
+    <title>Login with OTP</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<h1>Login</h1>
-<form id="loginForm">
-    <label for="username">Username:</label>
-    <input type="text" id="username" required><br>
-    <label for="password">Password:</label>
-    <input type="password" id="password" required><br>
-    <button type="submit">Login</button>
+<h1>Login with OTP</h1>
+
+<!-- فرم برای دریافت شماره موبایل و ارسال درخواست OTP -->
+<form id="otpRequestForm">
+    <label for="mobile">Mobile Number:</label>
+    <input type="text" id="mobile" placeholder="Enter your mobile number" required><br>
+    <button type="submit">Request OTP</button>
 </form>
 
-<br>
-
-
-
+<!-- فرم برای وارد کردن کد OTP -->
+<form id="otpVerifyForm" style="display:none;">
+    <label for="otp">Enter OTP:</label>
+    <input type="text" id="otp" placeholder="Enter the OTP" required><br>
+    <button type="submit">Verify OTP</button>
+</form>
 
 <script>
-
-
-    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    document.getElementById('otpRequestForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const username = document.getElementById('username').value;
-        const password = document.getElementById('password').value;
+        const mobile = document.getElementById('mobile').value;
 
-        const response = await fetch('/api/auth/login', {
+        const response = await fetch('/api/auth/request-otp', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ username, password }),
+            body: JSON.stringify({ mobile }),
+        });
+
+        if (response.ok) {
+            alert('OTP sent successfully!');
+            document.getElementById('otpRequestForm').style.display = 'none';
+            document.getElementById('otpVerifyForm').style.display = 'block';
+        } else {
+            alert('Error in sending OTP. Please try again.');
+        }
+    });
+
+    document.getElementById('otpVerifyForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const mobile = document.getElementById('mobile').value;
+        const otp = document.getElementById('otp').value;
+
+        const response = await fetch('/api/auth/verify-otp', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ mobile, otp }),
         });
 
         if (response.ok) {
             const data = await response.json();
             localStorage.setItem('token', data.token);
-            window.location.href = '/chat.html';
+            window.location.href = '/chat.html';  // هدایت به صفحه چت پس از موفقیت در ورود
         } else {
-            alert('Invalid credentials.');
+            alert('Invalid OTP. Please try again.');
         }
     });
 </script>
+
 </body>
 </html>
