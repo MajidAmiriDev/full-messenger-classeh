@@ -32,8 +32,25 @@ exports.sendMessage = async (req, res) => {
             tokens: tokens,
         };
 
-        // ارسال نوتیفیکیشن از طریق Firebase
-        await admin.messaging().sendMulticast(notification);
+
+        const sendNotification = async (token, message) => {
+            const payload = {
+                notification: {
+                    title: 'New Message',
+                    body: message,
+                },
+                token: token,
+            };
+
+            try {
+                const response = await admin.messaging().send(payload);
+                console.log('Successfully sent message:', response);
+            } catch (error) {
+                console.error('Error sending message:', error);
+            }
+        };
+
+
 
         await message.save();
         res.json(message);
