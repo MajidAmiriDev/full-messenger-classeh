@@ -1,0 +1,11 @@
+# Node.js
+node_modules/
+.env
+
+# Firebase service account key
+/config/firebase-adminsdk.json
+
+# Logs
+logs/
+*.log
+npm-debug.log*
